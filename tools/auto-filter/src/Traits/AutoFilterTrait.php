@@ -5,8 +5,8 @@ namespace Feiyun\Tools\AutoFilter\Traits;
 use Feiyun\Tools\AutoFilter\Contracts\AutoFilterInterface;
 use Feiyun\Tools\AutoFilter\Support\FieldTypeDetector;
 use Feiyun\Tools\AutoFilter\Support\QueryBuilder;
-use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use Hyperf\Context\ApplicationContext;
+use Hyperf\HttpServer\Contract\RequestInterface;
 
 /**
  * 自动筛选 Trait
@@ -27,11 +27,10 @@ trait AutoFilterTrait
      */
     public function scopeAutoFilter($query, array $blacklist = [], array $whitelist = [], array $asParams = [])
     {
-        $request = app(Request::class);
-        $params = $request->all();
+        $params = static::getRequestParams();
 
         // 始终排除分页参数
-        $params = Arr::except($params, ['page', 'page_size', 'per_page']);
+        $params = static::excludeParams($params, ['page', 'page_size', 'per_page']);
 
         if (empty($params) && empty($asParams)) {
             return $query;
@@ -104,5 +103,27 @@ trait AutoFilterTrait
                 QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
             }
         });
+    }
+
+    /**
+     * 获取请求参数
+     */
+    protected static function getRequestParams(): array
+    {
+        try {
+            $container = ApplicationContext::getContainer();
+            $request = $container->get(RequestInterface::class);
+            return $request->all();
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * 排除指定参数
+     */
+    protected static function excludeParams(array $params, array $excludeKeys): array
+    {
+        return array_diff_key($params, array_flip($excludeKeys));
     }
 }

@@ -4,7 +4,7 @@
 [![Total Downloads](https://poser.pugx.org/feiyun/tools/downloads)](https://packagist.org/packages/feiyun/tools)
 [![License](https://poser.pugx.org/feiyun/tools/license)](https://packagist.org/packages/feiyun/tools)
 
-企业级 Laravel/Hyperf 辅助工具集合，提供各种实用的开发工具来提升开发效率。
+企业级 Hyperf 辅助工具集合，提供各种实用的开发工具来提升 Hyperf 项目的开发效率。
 
 ## 🚀 特性
 
@@ -20,7 +20,7 @@
 composer require feiyun/tools
 ```
 
-Laravel 会自动发现并注册服务提供者。
+Hyperf 会自动发现并加载配置。
 
 ## 🛠️ 可用工具
 
@@ -55,13 +55,13 @@ feiyun-tools/
 
 ## 🔧 配置
 
-### Laravel 配置
+### Hyperf 配置
 
-包会自动注册服务提供者，无需手动配置。各工具的配置文件可以单独发布：
+包会自动加载配置，无需手动配置。各工具的配置文件可以单独发布：
 
 ```bash
 # 发布 Auto Filter 配置
-php artisan vendor:publish --tag=feiyun-auto-filter-config
+php bin/hyperf.php vendor:publish feiyun/tools
 ```
 
 ### 工具管理

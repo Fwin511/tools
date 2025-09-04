@@ -1,42 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Feiyun\Tools\Providers;
 
-use Feiyun\Tools\AutoFilter\Providers\AutoFilterServiceProvider;
-use Illuminate\Support\ServiceProvider;
-
-class FeiyunToolsServiceProvider extends ServiceProvider
+class FeiyunToolsServiceProvider
 {
-    /**
-     * 所有工具的服务提供者
-     *
-     * @var array
-     */
-    protected $toolProviders = [
-        AutoFilterServiceProvider::class,
-        // 在这里添加更多工具的服务提供者
-    ];
-
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    public function __invoke(): array
     {
-        // 注册所有工具的服务提供者
-        foreach ($this->toolProviders as $provider) {
-            $this->app->register($provider);
-        }
-    }
-
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        // 这里可以添加全局的引导逻辑
+        return [
+            'dependencies' => [
+                // 全局依赖注册
+            ],
+            'commands' => [
+                // 全局命令注册
+            ],
+            'listeners' => [
+                // 全局监听器注册
+            ],
+            'publish' => [
+                [
+                    'id' => 'feiyun-tools-config',
+                    'description' => 'Feiyun Tools configuration files.',
+                    'source' => __DIR__ . '/../../tools/auto-filter/config/auto-filter.php',
+                    'destination' => BASE_PATH . '/config/autoload/auto-filter.php',
+                ],
+            ],
+        ];
     }
 }

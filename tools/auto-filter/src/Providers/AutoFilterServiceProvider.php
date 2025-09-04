@@ -2,34 +2,30 @@
 
 namespace Feiyun\Tools\AutoFilter\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use Hyperf\Contract\ConfigInterface;
 
-class AutoFilterServiceProvider extends ServiceProvider
+class AutoFilterServiceProvider
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    public function __invoke(): array
     {
-        $this->mergeConfigFrom(
-            __DIR__ . '/../../config/auto-filter.php',
-            'auto-filter'
-        );
-    }
-
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__ . '/../../config/auto-filter.php' => config_path('auto-filter.php'),
-            ], 'feiyun-auto-filter-config');
-        }
+        return [
+            'dependencies' => [
+                // 这里可以注册依赖
+            ],
+            'commands' => [
+                // 这里可以注册命令
+            ],
+            'listeners' => [
+                // 这里可以注册监听器
+            ],
+            'publish' => [
+                [
+                    'id' => 'auto-filter-config',
+                    'description' => 'Auto Filter configuration file.',
+                    'source' => __DIR__ . '/../../config/auto-filter.php',
+                    'destination' => BASE_PATH . '/config/autoload/auto-filter.php',
+                ],
+            ],
+        ];
     }
 }

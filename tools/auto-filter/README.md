@@ -1,6 +1,6 @@
 # Auto Filter 自动筛选工具
 
-Laravel/Hyperf 模型自动筛选扩展，根据请求参数和字段类型自动构建查询条件。
+Hyperf 模型自动筛选扩展，根据请求参数和字段类型自动构建查询条件。
 
 ## 功能特性
 
@@ -20,7 +20,7 @@ composer require feiyun/tools
 ## 配置发布
 
 ```bash
-php artisan vendor:publish --tag=feiyun-auto-filter-config
+php bin/hyperf.php vendor:publish feiyun/tools
 ```
 
 ## 使用方法
@@ -164,7 +164,7 @@ use Feiyun\Tools\AutoFilter\Traits\AutoFilterTrait;
 
 3. **重新发布配置** (如果需要):
 ```bash
-php artisan vendor:publish --tag=feiyun-auto-filter-config
+php bin/hyperf.php vendor:publish feiyun/tools
 ```
 
 ## ⚙️ 配置选项

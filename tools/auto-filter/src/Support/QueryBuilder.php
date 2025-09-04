@@ -2,8 +2,6 @@
 
 namespace Feiyun\Tools\AutoFilter\Support;
 
-use Illuminate\Support\Arr;
-use Carbon\Carbon;
 
 class QueryBuilder
 {
@@ -36,7 +34,8 @@ class QueryBuilder
             case "mediumint":
             case "int":
             case "bigint":
-                $query->whereIn($field, Arr::wrap($value));
+                $values = is_array($value) ? $value : [$value];
+                $query->whereIn($field, $values);
                 break;
 
             case "decimal":
@@ -56,8 +55,8 @@ class QueryBuilder
             case "datetime":
             case "timestamp":
                 if (is_array($value) && isset($value['start_time']) && isset($value['end_time'])) {
-                    $startTime = Carbon::parse($value['start_time'])->startOfDay()->toDateTimeString();
-                    $endTime = Carbon::parse($value['end_time'])->endOfDay()->toDateTimeString();
+                    $startTime = static::parseDateTime($value['start_time'], true);
+                    $endTime = static::parseDateTime($value['end_time'], false);
                     $query->whereBetween($field, [$startTime, $endTime]);
                 }
                 break;
@@ -83,5 +82,27 @@ class QueryBuilder
         }
 
         return true;
+    }
+
+    /**
+     * 解析日期时间
+     */
+    protected static function parseDateTime(string $dateTime, bool $startOfDay = true): string
+    {
+        // 尝试使用 Carbon（如果可用）
+        if (class_exists('\Carbon\Carbon')) {
+            $carbon = \Carbon\Carbon::parse($dateTime);
+            return $startOfDay ? $carbon->startOfDay()->toDateTimeString() : $carbon->endOfDay()->toDateTimeString();
+        }
+
+        // 使用原生 DateTime
+        $dt = new \DateTime($dateTime);
+        if ($startOfDay) {
+            $dt->setTime(0, 0, 0);
+        } else {
+            $dt->setTime(23, 59, 59);
+        }
+
+        return $dt->format('Y-m-d H:i:s');
     }
 }

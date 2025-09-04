@@ -2,8 +2,9 @@
 
 namespace Feiyun\Tools\AutoFilter\Support;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use Hyperf\DbConnection\Db;
+use Hyperf\Context\ApplicationContext;
+use Psr\SimpleCache\CacheInterface;
 
 class FieldTypeDetector
 {
@@ -17,9 +18,30 @@ class FieldTypeDetector
     public static function getTableColumnsType(string $table, ?string $connection = null): array
     {
         $cacheKey = "auto_filter_table_columns_{$table}";
+        
+        // 尝试从缓存获取
+        $cache = static::getCache();
+        if ($cache && $cache->has($cacheKey)) {
+            return $cache->get($cacheKey, []);
+        }
 
-        return Cache::remember($cacheKey, 3600, function () use ($table, $connection) {
-            $db = $connection ? DB::connection($connection) : DB::connection();
+        $result = static::fetchTableColumns($table, $connection);
+        
+        // 缓存结果
+        if ($cache) {
+            $cache->set($cacheKey, $result, 3600);
+        }
+        
+        return $result;
+    }
+
+    /**
+     * 获取表字段信息
+     */
+    protected static function fetchTableColumns(string $table, ?string $connection = null): array
+    {
+        try {
+            $db = Db::connection($connection);
 
             // 处理跨库表名，如 "database.table"
             if (strpos($table, '.') !== false) {
@@ -41,7 +63,23 @@ class FieldTypeDetector
             }
 
             return $map;
-        });
+        } catch (\Exception $e) {
+            // 如果数据库查询失败，返回空数组
+            return [];
+        }
+    }
+
+    /**
+     * 获取缓存实例
+     */
+    protected static function getCache(): ?CacheInterface
+    {
+        try {
+            $container = ApplicationContext::getContainer();
+            return $container->get(CacheInterface::class);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
