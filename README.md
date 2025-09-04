@@ -24,45 +24,13 @@ Laravel 会自动发现并注册服务提供者。
 
 ## 🛠️ 可用工具
 
-### 1. Auto Filter 自动筛选工具
+### Auto Filter 自动筛选工具
+智能数据库查询筛选工具，根据请求参数和字段类型自动构建查询条件。
 
-根据请求参数和字段类型自动构建查询条件的强大工具。
+[查看详细文档 →](./tools/auto-filter/README.md)
 
-**特性:**
-- 🚀 智能根据字段类型构建查询条件
-- 🎯 支持黑白名单字段过滤
-- 🔗 支持关联表字段查询
-- 💾 内置缓存机制，提升性能
-- 🛡️ 严格的类型检测和参数验证
-
-**快速使用:**
-```php
-use Feiyun\Tools\AutoFilter\Traits\AutoFilterTrait;
-
-class User extends Model
-{
-    use AutoFilterTrait;
-}
-
-// 控制器中使用
-$users = User::query()->autoFilter()->paginate();
-```
-
-**支持的查询类型:**
-- **字符串字段**: `LIKE '%value%'` 模糊查询
-- **整数字段**: `IN (values)` 精确查询
-- **浮点数字段**: `BETWEEN` 范围查询
-- **日期时间字段**: `BETWEEN` 日期范围查询
-
-[查看 Auto Filter 详细文档](./tools/auto-filter/README.md)
-
-### 2. 更多工具 (规划中)
-
-我们计划添加更多实用的企业级工具，如：
-- 通用导出工具
-- 缓存管理工具  
-- 日志分析工具
-- API 限流工具
+### 更多工具 (规划中)
+我们计划添加更多实用的企业级工具，如通用导出工具、缓存管理工具等。
 
 ## 📁 项目结构
 
@@ -108,77 +76,6 @@ $tools = ToolsManager::getAvailableTools();
 
 // 检查工具是否可用
 $isAvailable = ToolsManager::isToolAvailable('auto-filter');
-
-// 获取工具信息
-$info = ToolsManager::getToolInfo('auto-filter');
-```
-
-## 📚 使用示例
-
-### 用户管理系统
-
-```php
-// GET /api/users?name=张&email=@gmail.com&age=25&created_at[start_time]=2024-01-01
-
-class UserController extends Controller
-{
-    public function index()
-    {
-        return User::query()
-            ->autoFilter(['password', 'remember_token'])
-            ->paginate();
-    }
-}
-```
-
-### 订单查询系统
-
-```php
-// GET /api/orders?status=completed&amount[start]=100&amount[end]=1000&user.name=张三
-
-class OrderController extends Controller  
-{
-    public function index()
-    {
-        return Order::query()
-            ->with('user')
-            ->autoFilter()
-            ->paginate();
-    }
-}
-```
-
-## 🛡️ 安全考虑
-
-1. **默认黑名单**: 自动排除敏感字段如 `password`、`remember_token` 等
-2. **字段验证**: 只对数据库中存在的字段进行筛选
-3. **类型安全**: 根据字段类型进行相应的查询构建
-4. **SQL注入防护**: 使用 Laravel 的查询构建器，自动防止 SQL 注入
-
-## 🔄 版本升级指南
-
-### 从 feiyun/auto-filter 升级到 feiyun/tools
-
-如果您之前使用的是 `feiyun/auto-filter` 包，升级到 `feiyun/tools` 需要进行以下更改：
-
-1. **更新 composer.json**:
-```bash
-composer remove feiyun/auto-filter
-composer require feiyun/tools
-```
-
-2. **更新命名空间**:
-```php
-// 旧的命名空间
-use Feiyun\AutoFilter\Traits\AutoFilterTrait;
-
-// 新的命名空间
-use Feiyun\Tools\AutoFilter\Traits\AutoFilterTrait;
-```
-
-3. **重新发布配置** (如果需要):
-```bash
-php artisan vendor:publish --tag=feiyun-auto-filter-config
 ```
 
 ## 🤝 贡献

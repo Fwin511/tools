@@ -82,7 +82,92 @@ class UserController extends Controller
 - **日期字段**: 支持日期范围查询 `['start_time' => '2023-01-01', 'end_time' => '2023-12-31']`
 - **时间戳字段**: 支持时间范围查询（自动处理开始和结束时间）
 
-## 配置选项
+## 📚 详细使用示例
+
+### 用户管理系统
+
+```php
+// GET /api/users?name=张&email=@gmail.com&age=25&created_at[start_time]=2024-01-01
+
+class UserController extends Controller
+{
+    public function index()
+    {
+        return User::query()
+            ->autoFilter(['password', 'remember_token'])
+            ->paginate();
+    }
+}
+```
+
+### 订单查询系统
+
+```php
+// GET /api/orders?status=completed&amount[start]=100&amount[end]=1000&user.name=张三
+
+class OrderController extends Controller  
+{
+    public function index()
+    {
+        return Order::query()
+            ->with('user')
+            ->autoFilter()
+            ->paginate();
+    }
+}
+```
+
+### 商品筛选系统
+
+```php
+// GET /api/products?category.name=电子产品&price[start]=100&price[end]=5000&in_stock=1
+
+class ProductController extends Controller
+{
+    public function index()
+    {
+        return Product::query()
+            ->with('category')
+            ->autoFilter([], ['name', 'price', 'category.name', 'in_stock'])
+            ->paginate();
+    }
+}
+```
+
+## 🛡️ 安全考虑
+
+1. **默认黑名单**: 自动排除敏感字段如 `password`、`remember_token` 等
+2. **字段验证**: 只对数据库中存在的字段进行筛选
+3. **类型安全**: 根据字段类型进行相应的查询构建
+4. **SQL注入防护**: 使用 Laravel 的查询构建器，自动防止 SQL 注入
+
+## 🔄 版本升级指南
+
+### 从 feiyun/auto-filter 升级到 feiyun/tools
+
+如果您之前使用的是 `feiyun/auto-filter` 包，升级到 `feiyun/tools` 需要进行以下更改：
+
+1. **更新 composer.json**:
+```bash
+composer remove feiyun/auto-filter
+composer require feiyun/tools
+```
+
+2. **更新命名空间**:
+```php
+// 旧的命名空间
+use Feiyun\AutoFilter\Traits\AutoFilterTrait;
+
+// 新的命名空间
+use Feiyun\Tools\AutoFilter\Traits\AutoFilterTrait;
+```
+
+3. **重新发布配置** (如果需要):
+```bash
+php artisan vendor:publish --tag=feiyun-auto-filter-config
+```
+
+## ⚙️ 配置选项
 
 ```php
 return [
