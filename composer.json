@@ -54,6 +54,9 @@
     "prefer-stable": true,
     "scripts": {
         "test": "vendor/bin/phpunit",
-        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "readme:en": "make readme-en",
+        "readme:cn": "make readme-cn",
+        "readme:restore": "make readme-restore"
     }
 }
