@@ -17,9 +17,15 @@
     "authors": [
         {
             "name": "Sally",
-            "email": "your-email@example.com"
+            "email": "baochengyong@feiwin.cn",
+            "role": "Developer"
         }
     ],
+    "homepage": "https://github.com/Fwin511/tools",
+    "support": {
+        "issues": "https://github.com/Fwin511/tools/issues",
+        "source": "https://github.com/Fwin511/tools"
+    },
     "require": {
         "php": ">=8.0",
         "illuminate/database": "^8.0|^9.0|^10.0|^11.0",
