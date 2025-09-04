@@ -1,6 +1,6 @@
 <?php
 
-namespace Feiyun\AutoFilter\Support;
+namespace Feiyun\Tools\AutoFilter\Support;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +17,10 @@ class FieldTypeDetector
     public static function getTableColumnsType(string $table, ?string $connection = null): array
     {
         $cacheKey = "auto_filter_table_columns_{$table}";
-        
+
         return Cache::remember($cacheKey, 3600, function () use ($table, $connection) {
             $db = $connection ? DB::connection($connection) : DB::connection();
-            
+
             // 处理跨库表名，如 "database.table"
             if (strpos($table, '.') !== false) {
                 [$schema, $tableName] = explode('.', $table, 2);
@@ -55,7 +55,7 @@ class FieldTypeDetector
     public static function getFieldType(string $field, string $table, ?string $connection = null): ?string
     {
         $columnsMap = self::getTableColumnsType($table, $connection);
-        
+
         return $columnsMap[$field] ?? null;
     }
 }

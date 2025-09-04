@@ -1,6 +1,6 @@
 <?php
 
-namespace Feiyun\AutoFilter\Contracts;
+namespace Feiyun\Tools\AutoFilter\Contracts;
 
 interface AutoFilterInterface
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Feiyun\AutoFilter\Traits;
+namespace Feiyun\Tools\AutoFilter\Traits;
 
-use Feiyun\AutoFilter\Contracts\AutoFilterInterface;
-use Feiyun\AutoFilter\Support\FieldTypeDetector;
-use Feiyun\AutoFilter\Support\QueryBuilder;
+use Feiyun\Tools\AutoFilter\Contracts\AutoFilterInterface;
+use Feiyun\Tools\AutoFilter\Support\FieldTypeDetector;
+use Feiyun\Tools\AutoFilter\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
@@ -97,7 +97,7 @@ trait AutoFilterTrait
             $relatedModel = $q->getModel();
             $table = $relatedModel->getTable();
             $connection = $relatedModel->getConnectionName();
-            
+
             $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
 
             if (array_key_exists($field, $columnsTypeMap)) {

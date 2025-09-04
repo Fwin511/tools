@@ -1,6 +1,6 @@
 <?php
 
-namespace Feiyun\AutoFilter\Support;
+namespace Feiyun\Tools\AutoFilter\Support;
 
 use Illuminate\Support\Arr;
 use Carbon\Carbon;

@@ -42,20 +42,34 @@ return [
     */
     'field_type_mapping' => [
         'string_types' => [
-            'char', 'varchar', 'varbinary', 'binary',
-            'tinytext', 'text', 'mediumtext', 'longtext', 'json'
+            'char',
+            'varchar',
+            'varbinary',
+            'binary',
+            'tinytext',
+            'text',
+            'mediumtext',
+            'longtext',
+            'json'
         ],
         'integer_types' => [
-            'tinyint', 'smallint', 'mediumint', 'int', 'bigint'
+            'tinyint',
+            'smallint',
+            'mediumint',
+            'int',
+            'bigint'
         ],
         'decimal_types' => [
-            'decimal', 'float', 'double'
+            'decimal',
+            'float',
+            'double'
         ],
         'date_types' => [
             'date'
         ],
         'datetime_types' => [
-            'datetime', 'timestamp'
+            'datetime',
+            'timestamp'
         ],
     ],
 ];

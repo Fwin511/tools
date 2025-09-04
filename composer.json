@@ -1,16 +1,18 @@
 {
-    "name": "feiyun/auto-filter",
-    "description": "Laravel/Hyperf 模型自动筛选扩展包，根据请求参数和字段类型自动构建查询条件",
+    "name": "feiyun/tools",
+    "description": "飞云工具包 - 企业级 Laravel/Hyperf 辅助工具集合，包含自动筛选、通用导出等实用工具",
     "type": "library",
     "license": "MIT",
     "keywords": [
         "laravel",
         "hyperf",
+        "tools",
         "filter",
+        "export",
         "query",
         "database",
         "eloquent",
-        "auto-filter"
+        "utilities"
     ],
     "authors": [
         {
@@ -21,7 +23,8 @@
     "require": {
         "php": ">=8.0",
         "illuminate/database": "^8.0|^9.0|^10.0|^11.0",
-        "illuminate/support": "^8.0|^9.0|^10.0|^11.0"
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+        "nesbot/carbon": "^2.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.0|^10.0",
@@ -29,18 +32,19 @@
     },
     "autoload": {
         "psr-4": {
-            "Feiyun\\AutoFilter\\": "src/"
+            "Feiyun\\Tools\\": "src/",
+            "Feiyun\\Tools\\AutoFilter\\": "tools/auto-filter/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Feiyun\\AutoFilter\\Tests\\": "tests/"
+            "Feiyun\\Tools\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Feiyun\\AutoFilter\\Providers\\LaravelServiceProvider"
+                "Feiyun\\Tools\\Providers\\FeiyunToolsServiceProvider"
             ]
         }
     },
