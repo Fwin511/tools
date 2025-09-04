@@ -18,7 +18,7 @@ class FieldTypeDetector
     public static function getTableColumnsType(string $table, ?string $connection = null): array
     {
         $cacheKey = "auto_filter_table_columns_{$table}";
-        
+
         // 尝试从缓存获取
         $cache = static::getCache();
         if ($cache && $cache->has($cacheKey)) {
@@ -26,12 +26,12 @@ class FieldTypeDetector
         }
 
         $result = static::fetchTableColumns($table, $connection);
-        
+
         // 缓存结果
         if ($cache) {
             $cache->set($cacheKey, $result, 3600);
         }
-        
+
         return $result;
     }
 
