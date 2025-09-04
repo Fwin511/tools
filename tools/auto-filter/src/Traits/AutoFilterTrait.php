@@ -10,8 +10,8 @@ use Hyperf\HttpServer\Contract\RequestInterface;
 
 /**
  * 自动筛选 Trait
- * 
- * @method mixed autoFilter(array $blacklist = [], array $whitelist = [], array $asParam = [])
+ *
+ * @method  \Hyperf\Database\Model\Builder  autoFilter(array $blacklist = [], array $whitelist = [], array $asParam = [])
  */
 trait AutoFilterTrait
 {
@@ -19,11 +19,11 @@ trait AutoFilterTrait
      * 自动筛选
      * 用法: Model::query()->autoFilter($blacklist, $whitelist, ['field'=>'value'])->get();
      *
-     * @param mixed $query
+     * @param \Hyperf\Database\Model\Builder $query
      * @param array $blacklist 禁止字段
      * @param array $whitelist 允许字段
      * @param array $asParams 外部传递的搜索参数
-     * @return mixed
+     * @return  \Hyperf\Database\Model\Builder
      */
     public function scopeAutoFilter($query, array $blacklist = [], array $whitelist = [], array $asParams = [])
     {
