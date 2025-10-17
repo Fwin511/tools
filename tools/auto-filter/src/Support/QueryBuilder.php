@@ -34,8 +34,12 @@ class QueryBuilder
             case "mediumint":
             case "int":
             case "bigint":
-                $values = is_array($value) ? $value : [$value];
-                $query->whereIn($field, $values);
+                if (!empty($value)) {
+
+                    $values = is_array($value) ? $value : [$value];
+                    $query->whereIn($field, $values);
+                }
+
                 break;
 
             case "decimal":
