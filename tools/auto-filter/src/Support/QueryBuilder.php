@@ -35,11 +35,16 @@ class QueryBuilder
             case "int":
             case "bigint":
                 if (!empty($value)) {
-
                     $values = is_array($value) ? $value : [$value];
-                    $query->whereIn($field, $values);
+                    // 过滤空值并确保数组不为空
+                    $values = array_filter($values, function($v) {
+                        return $v !== null && $v !== '';
+                    });
+                    
+                    if (!empty($values)) {
+                        $query->whereIn($field, $values);
+                    }
                 }
-
                 break;
 
             case "decimal":

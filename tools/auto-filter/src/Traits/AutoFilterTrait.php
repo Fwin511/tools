@@ -49,9 +49,20 @@ trait AutoFilterTrait
         $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
 
         foreach ($params as $key => $value) {
-            // 跳过空值
-            if ($value === null || $value === '') {
+            // 跳过空值和空数组
+            if ($value === null || $value === '' || (is_array($value) && empty($value))) {
                 continue;
+            }
+            
+            // 如果是数组，过滤掉空元素
+            if (is_array($value)) {
+                $value = array_filter($value, function($v) {
+                    return $v !== null && $v !== '';
+                });
+                // 如果过滤后数组为空，跳过
+                if (empty($value)) {
+                    continue;
+                }
             }
 
             if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
@@ -70,6 +81,38 @@ trait AutoFilterTrait
         }
 
         return $query;
+    }
+
+    /**
+     * 调试自动筛选 - 输出生成的 SQL 和参数
+     * 用法: Model::query()->autoFilter()->debugAutoFilter();
+     *
+     * @param \Hyperf\Database\Model\Builder $query
+     * @return array
+     */
+    public function scopeDebugAutoFilter($query): array
+    {
+        return [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'raw_sql' => $this->getRawSql($query)
+        ];
+    }
+
+    /**
+     * 获取完整的 SQL 语句（包含参数值）
+     */
+    protected function getRawSql($query): string
+    {
+        $sql = $query->toSql();
+        $bindings = $query->getBindings();
+        
+        foreach ($bindings as $binding) {
+            $value = is_numeric($binding) ? $binding : "'{$binding}'";
+            $sql = preg_replace('/\?/', $value, $sql, 1);
+        }
+        
+        return $sql;
     }
 
     /**
