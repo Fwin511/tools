@@ -120,7 +120,17 @@ Task::query()
 // 3. 混合使用
 // GET /api/tasks?status=pending&taskResult._as_submit_staff_id=100
 // 实际搜索字段: status, taskResult.submit_staff_id
+
+// 4. 系统参数自动过滤
+// GET /api/tasks?_sort={}&_source=list&_as_serial_number=R01594
+// _sort 和 _source 会被自动排除，只有 _as_serial_number 会被解析
 ```
+
+### 注意事项
+
+- 以单个下划线 `_` 开头的参数（除了 `_as_`）会被认为是系统参数并自动排除
+- 只有以 `_as_` 开头的参数才会被识别为别名字段
+- 支持普通字段和关联表字段的别名
 
 ## 📚 详细使用示例
 

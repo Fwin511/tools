@@ -29,8 +29,11 @@ trait AutoFilterTrait
     {
         $params = static::getRequestParams();
 
-        // 始终排除分页参数
+        // 始终排除分页参数和系统参数
         $params = static::excludeParams($params, ['page', 'page_size', 'per_page']);
+        
+        // 排除以单个下划线开头的系统参数（但保留 _as_ 别名字段）
+        $params = static::excludeSystemParams($params);
 
         if (empty($params) && empty($asParams)) {
             return $query;
@@ -171,6 +174,39 @@ trait AutoFilterTrait
     protected static function excludeParams(array $params, array $excludeKeys): array
     {
         return array_diff_key($params, array_flip($excludeKeys));
+    }
+
+    /**
+     * 排除以单个下划线开头的系统参数
+     * 但保留 _as_ 开头的别名字段
+     * 
+     * @param array $params
+     * @return array
+     */
+    protected static function excludeSystemParams(array $params): array
+    {
+        return array_filter($params, function ($key) {
+            // 如果以 _as_ 开头，保留（这是别名字段）
+            if (strpos($key, '_as_') === 0) {
+                return true;
+            }
+            
+            // 如果包含点号，检查最后一部分是否以 _as_ 开头（关联表别名）
+            if (strpos($key, '.') !== false) {
+                $parts = explode('.', $key);
+                $lastPart = end($parts);
+                if (strpos($lastPart, '_as_') === 0) {
+                    return true;
+                }
+            }
+            
+            // 排除其他以单个下划线开头的系统参数（如 _sort, _filter 等）
+            if (strpos($key, '_') === 0) {
+                return false;
+            }
+            
+            return true;
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     /**

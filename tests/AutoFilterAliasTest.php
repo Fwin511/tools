@@ -84,4 +84,37 @@ class AutoFilterAliasTest extends TestCase
         $result = $method->invokeArgs($this, ['relation._as_']);
         $this->assertEquals('relation.', $result);
     }
+
+    /**
+     * 测试系统参数过滤
+     */
+    public function testExcludeSystemParams()
+    {
+        $reflection = new \ReflectionClass($this);
+        $method = $reflection->getMethod('excludeSystemParams');
+        $method->setAccessible(true);
+
+        $params = [
+            '_sort' => [],
+            '_filter' => 'test',
+            '_source' => 'list',
+            '_as_serial_number' => 'R01594',
+            'relation._as_field' => 'value',
+            'normal_field' => 'value',
+        ];
+
+        $result = $method->invokeArgs($this, [$params]);
+
+        // 系统参数应该被排除
+        $this->assertArrayNotHasKey('_sort', $result);
+        $this->assertArrayNotHasKey('_filter', $result);
+        $this->assertArrayNotHasKey('_source', $result);
+
+        // 别名字段应该保留
+        $this->assertArrayHasKey('_as_serial_number', $result);
+        $this->assertArrayHasKey('relation._as_field', $result);
+
+        // 普通字段应该保留
+        $this->assertArrayHasKey('normal_field', $result);
+    }
 }
