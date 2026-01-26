@@ -53,10 +53,10 @@ trait AutoFilterTrait
             if ($value === null || $value === '' || (is_array($value) && empty($value))) {
                 continue;
             }
-            
+
             // 如果是数组，过滤掉空元素
             if (is_array($value)) {
-                $value = array_filter($value, function($v) {
+                $value = array_filter($value, function ($v) {
                     return $v !== null && $v !== '';
                 });
                 // 如果过滤后数组为空，跳过
@@ -65,18 +65,21 @@ trait AutoFilterTrait
                 }
             }
 
-            if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
+            // 解析字段别名：将 _as_ 开头的字段转换为实际字段名
+            $actualKey = static::parseFieldAlias($key);
+
+            if (!QueryBuilder::isFieldAllowed($actualKey, $whitelist, $blacklist)) {
                 continue;
             }
 
-            if (strpos($key, '.') === false) {
+            if (strpos($actualKey, '.') === false) {
                 // 当前表字段
-                if (array_key_exists($key, $columnsTypeMap)) {
-                    QueryBuilder::buildWhere($query, $key, $value, $columnsTypeMap[$key]);
+                if (array_key_exists($actualKey, $columnsTypeMap)) {
+                    QueryBuilder::buildWhere($query, $actualKey, $value, $columnsTypeMap[$actualKey]);
                 }
             } else {
                 // 关联表字段
-                $this->buildRelationWhere($query, $key, $value, $whitelist, $blacklist);
+                $this->buildRelationWhere($query, $actualKey, $value, $whitelist, $blacklist);
             }
         }
 
@@ -106,12 +109,12 @@ trait AutoFilterTrait
     {
         $sql = $query->toSql();
         $bindings = $query->getBindings();
-        
+
         foreach ($bindings as $binding) {
             $value = is_numeric($binding) ? $binding : "'{$binding}'";
             $sql = preg_replace('/\?/', $value, $sql, 1);
         }
-        
+
         return $sql;
     }
 
@@ -168,5 +171,38 @@ trait AutoFilterTrait
     protected static function excludeParams(array $params, array $excludeKeys): array
     {
         return array_diff_key($params, array_flip($excludeKeys));
+    }
+
+    /**
+     * 解析字段别名
+     * 将 _as_ 开头的字段转换为实际字段名
+     * 例如: taskResult._as_submit_staff_id -> taskResult.submit_staff_id
+     *
+     * @param string $fieldName
+     * @return string
+     */
+    protected static function parseFieldAlias(string $fieldName): string
+    {
+        // 检查是否包含点号（关联表字段）
+        if (strpos($fieldName, '.') !== false) {
+            // 分离关联路径和字段名
+            $parts = explode('.', $fieldName);
+            $field = array_pop($parts);
+            $relationPath = implode('.', $parts);
+
+            // 处理字段名的别名
+            if (strpos($field, '_as_') === 0) {
+                $field = substr($field, 4); // 移除 _as_ 前缀
+            }
+
+            return $relationPath . '.' . $field;
+        }
+
+        // 处理普通字段的别名
+        if (strpos($fieldName, '_as_') === 0) {
+            return substr($fieldName, 4); // 移除 _as_ 前缀
+        }
+
+        return $fieldName;
     }
 }
