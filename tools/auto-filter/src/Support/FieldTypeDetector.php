@@ -3,7 +3,6 @@
 namespace Feiyun\Tools\AutoFilter\Support;
 
 use Hyperf\DbConnection\Db;
-use Hyperf\Context\ApplicationContext;
 use Psr\SimpleCache\CacheInterface;
 
 class FieldTypeDetector
@@ -75,7 +74,12 @@ class FieldTypeDetector
     protected static function getCache(): ?CacheInterface
     {
         try {
-            $container = ApplicationContext::getContainer();
+            // 兼容 Hyperf 2.x (Hyperf\Utils\ApplicationContext) 和 3.x (Hyperf\Context\ApplicationContext)
+            if (class_exists(\Hyperf\Context\ApplicationContext::class)) {
+                $container = \Hyperf\Context\ApplicationContext::getContainer();
+            } else {
+                $container = \Hyperf\Utils\ApplicationContext::getContainer();
+            }
             return $container->get(CacheInterface::class);
         } catch (\Exception $e) {
             return null;

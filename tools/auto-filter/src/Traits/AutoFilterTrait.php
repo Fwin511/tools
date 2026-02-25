@@ -5,7 +5,6 @@ namespace Feiyun\Tools\AutoFilter\Traits;
 use Feiyun\Tools\AutoFilter\Contracts\AutoFilterInterface;
 use Feiyun\Tools\AutoFilter\Support\FieldTypeDetector;
 use Feiyun\Tools\AutoFilter\Support\QueryBuilder;
-use Hyperf\Context\ApplicationContext;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
 /**
@@ -160,7 +159,12 @@ trait AutoFilterTrait
     protected static function getRequestParams(): array
     {
         try {
-            $container = ApplicationContext::getContainer();
+            // 兼容 Hyperf 2.x (Hyperf\Utils\ApplicationContext) 和 3.x (Hyperf\Context\ApplicationContext)
+            if (class_exists(\Hyperf\Context\ApplicationContext::class)) {
+                $container = \Hyperf\Context\ApplicationContext::getContainer();
+            } else {
+                $container = \Hyperf\Utils\ApplicationContext::getContainer();
+            }
             $request = $container->get(RequestInterface::class);
             return $request->all();
         } catch (\Exception $e) {
