@@ -20,7 +20,14 @@ class ToolsManager
                 'provider' => 'Feiyun\\Tools\\AutoFilter\\Providers\\AutoFilterServiceProvider',
                 'status' => 'stable',
             ],
-            // 在这里添加更多工具
+            'sql-migration' => [
+                'name' => 'SQL迁移登记',
+                'description' => '统一处理 config/sql.php 的登记、幂等写入和中间件通知流程',
+                'namespace' => 'Feiyun\\Tools\\SqlMigration',
+                'config' => 'sql-migration',
+                'provider' => 'Feiyun\\Tools\\SqlMigration\\Providers\\SqlMigrationServiceProvider',
+                'status' => 'stable',
+            ],
         ];
     }
 
