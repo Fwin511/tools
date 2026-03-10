@@ -24,7 +24,7 @@ class FeiyunToolsServiceProvider
                 // 全局命令注册
             ],
             'listeners' => [
-                // 统一监听器，受 sql-migration.enabled 控制（默认 false）。
+                // 统一监听器，受 sql-migration.enabled 控制。
                 WorkerStartSqlSyncListener::class,
             ],
             'publish' => [
@@ -36,9 +36,15 @@ class FeiyunToolsServiceProvider
                 ],
                 [
                     'id' => 'feiyun-tools-sql-migration-config',
-                    'description' => 'SQL migration configuration file.',
+                    'description' => 'SQL migration runtime config file.',
                     'source' => __DIR__ . '/../../tools/sql-migration/config/sql-migration.php',
                     'destination' => BASE_PATH . '/config/autoload/sql-migration.php',
+                ],
+                [
+                    'id' => 'feiyun-tools-sql-migration-sql-template',
+                    'description' => 'SQL migration template file.',
+                    'source' => __DIR__ . '/../../tools/sql-migration/config/sql.php',
+                    'destination' => BASE_PATH . '/config/sql.php',
                 ],
             ],
         ];

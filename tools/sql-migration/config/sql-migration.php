@@ -4,33 +4,23 @@ declare(strict_types=1);
 
 return [
     // 是否启用通用 SQL 同步能力。
-    'enabled' => false,
+    'enabled' => true,
 
-    // 业务端 SQL 配置文件路径（通常保持默认）。
+    // 各业务项目保留自己的 SQL 配置文件。
     'sql_config_path' => BASE_PATH . '/config/sql.php',
 
-    // 同步完成后是否通知中间件执行。
+    // 同步完成后是否通知中间件执行 SQL。
     'notify_general' => true,
 
-    // 业务端记录存储模型映射。
+    // 业务端 sql_handle_record 模型配置（OA 示例）。
     'store' => [
-        // 业务项目 sql_handle_record 模型类，例如：App\Model\SqlHandleRecord::class
-        'model_class' => '',
-
-        // 字段映射（默认约定字段名一致时无需改动）。
-        'serial_number_field' => 'serial_number',
-        'db_name_field' => 'db_name',
-        'is_run_field' => 'is_run',
-        'title_field' => 'title',
-        'sql_field' => 'sql',
-        'created_at_field' => 'created_at',
-        'result_field' => 'result',
+        'model_class' => \App\Model\SqlHandleRecord::class,
     ],
 
-    // 中间件通知配置。
+    // 中间件通知配置（OA 示例）。
     'notify' => [
-        // 为空时默认使用业务项目 config('base_url')。
-        'base_url' => '',
+        // 默认沿用业务项目 BASE_URL。
+        'base_url' => env('BASE_URL', 'https://api.testfw.cn'),
         'path' => '/gn/public/handle_sql',
         'method' => 'POST',
         'payload_key' => 'database',

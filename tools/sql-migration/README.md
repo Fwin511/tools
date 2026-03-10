@@ -6,7 +6,7 @@
 2. 幂等写入业务端 `sql_handle_record`
 3. 通知中间件按数据库列表执行
 
-## 安装
+## 安装（不锁版本）
 
 ```bash
 composer require feiyun/tools
@@ -16,13 +16,17 @@ composer require feiyun/tools
 
 只需要配置，不需要写业务适配代码：
 
-1. 发布配置
+1. 发布配置与模板
 
 ```bash
 php bin/hyperf.php vendor:publish feiyun/tools
 ```
 
-2. 配置 `config/autoload/sql-migration.php`
+发布结果：
+- `config/autoload/sql-migration.php`
+- `config/sql.php`
+
+2. 校对 `config/autoload/sql-migration.php`
 
 ```php
 return [
@@ -33,14 +37,15 @@ return [
         'model_class' => App\\Model\\SqlHandleRecord::class,
     ],
     'notify' => [
+        'base_url' => env('BASE_URL', 'https://api.testfw.cn'),
         'path' => '/gn/public/handle_sql',
     ],
 ];
 ```
 
-3. 保留每个业务项目自己的 `config/sql.php`
+3. 修改 `config/sql.php` 中的业务 SQL（重点替换 `serial_number` 为真实唯一值）
 
-> 监听器 `WorkerStartSqlSyncListener` 已由主 Provider 自动注册，`enabled=false` 时不会执行。
+> 监听器 `WorkerStartSqlSyncListener` 已由主 Provider 自动注册。
 
 ## 可选高级接入
 
