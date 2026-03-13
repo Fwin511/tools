@@ -136,6 +136,10 @@ trait AutoFilterTrait
         $field = array_pop($relations);
         $relationPath = implode('.', $relations);
 
+        if (empty($relationPath) || !$this->hasValidRelationPath($query, $relationPath)) {
+            return;
+        }
+
         $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
             if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
                 return;
@@ -151,6 +155,45 @@ trait AutoFilterTrait
                 QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
             }
         });
+    }
+
+    /**
+     * 检查关联路径是否有效
+     * 例如：taskResult.user.name 会依次验证 taskResult 和 user 关系是否存在
+     *
+     * @param mixed $query
+     * @param string $relationPath
+     * @return bool
+     */
+    protected function hasValidRelationPath($query, string $relationPath): bool
+    {
+        $relations = explode('.', $relationPath);
+        $model = $query->getModel();
+
+        foreach ($relations as $relation) {
+            if ($relation === '' || !method_exists($model, $relation)) {
+                return false;
+            }
+
+            try {
+                $relationInstance = $model->{$relation}();
+            } catch (\Throwable $e) {
+                return false;
+            }
+
+            if (!is_object($relationInstance) || !method_exists($relationInstance, 'getRelated')) {
+                return false;
+            }
+
+            $relatedModel = $relationInstance->getRelated();
+            if (!is_object($relatedModel)) {
+                return false;
+            }
+
+            $model = $relatedModel;
+        }
+
+        return true;
     }
 
     /**

@@ -16,6 +16,8 @@ class QueryBuilder
      */
     public static function buildWhere($query, string $field, $value, string $type): void
     {
+        $field = static::qualifyField($query, $field);
+
         switch ($type) {
             case "char":
             case "varchar":
@@ -26,6 +28,18 @@ class QueryBuilder
             case "mediumtext":
             case "longtext":
             case "json":
+                //兼容whereIn语法，如果值传递的是数组
+                if (is_array($value)) {
+                    $values = array_filter($value, function ($v) {
+                        return $v !== null && $v !== '';
+                    });
+
+                    if (!empty($values)) {
+                        $query->whereIn($field, array_values($values));
+                    }
+                    break;
+                }
+
                 $query->where($field, 'like', "%{$value}%");
                 break;
 
@@ -70,6 +84,44 @@ class QueryBuilder
                 }
                 break;
         }
+    }
+
+    /**
+     * 为字段补全表前缀，避免关联查询（尤其 belongsToMany）中的字段歧义。
+     *
+     * @param mixed $query
+     * @param string $field
+     * @return string
+     */
+    protected static function qualifyField($query, string $field): string
+    {
+        // 已经是限定字段或表达式时不处理
+        if (strpos($field, '.') !== false || strpos($field, '->') !== false) {
+            return $field;
+        }
+
+        if (!is_object($query) || !method_exists($query, 'getModel')) {
+            return $field;
+        }
+
+        try {
+            $model = $query->getModel();
+            if (!is_object($model)) {
+                return $field;
+            }
+
+            if (method_exists($model, 'qualifyColumn')) {
+                return $model->qualifyColumn($field);
+            }
+
+            if (method_exists($model, 'getTable')) {
+                return $model->getTable() . '.' . $field;
+            }
+        } catch (\Throwable $e) {
+            return $field;
+        }
+
+        return $field;
     }
 
     /**

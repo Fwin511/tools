@@ -4,6 +4,13 @@ All notable changes to `feiyun/tools` will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-03-13
+
+### Fixed
+- Auto Filter: `string_types` 字段在传入数组值时改为 `whereIn` 查询，标量值仍保持 `like` 查询
+- Auto Filter: 关联字段查询前增加关联路径有效性校验，不存在关系时自动跳过避免异常
+- Auto Filter: 自动为未限定字段补全表名前缀，修复 `belongsToMany` 场景下 `id` 字段歧义报错
+
 ### Added
 - 字段别名功能：支持使用 `_as_` 前缀定义字段别名
   - 普通字段: `_as_field_name` → `field_name`
