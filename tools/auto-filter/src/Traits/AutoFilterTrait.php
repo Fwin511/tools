@@ -140,21 +140,45 @@ trait AutoFilterTrait
             return;
         }
 
-        $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
-            if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
-                return;
-            }
+        $model = $query->getModel();
+        $relationInstance = $model->{$relationPath}();
 
-            $relatedModel = $q->getModel();
-            $table = $relatedModel->getTable();
-            $connection = $relatedModel->getConnectionName();
+        // 检查是否为 MorphTo 关联
+        if ($relationInstance instanceof \Hyperf\Database\Model\Relations\MorphTo) {
+            // 对于 MorphTo 关联，使用 whereHasMorph
+            $query->whereHasMorph($relationPath, '*', function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
+                if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
+                    return;
+                }
 
-            $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
+                $relatedModel = $q->getModel();
+                $table = $relatedModel->getTable();
+                $connection = $relatedModel->getConnectionName();
 
-            if (array_key_exists($field, $columnsTypeMap)) {
-                QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
-            }
-        });
+                $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
+
+                if (array_key_exists($field, $columnsTypeMap)) {
+                    QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
+                }
+            });
+        } else {
+            // 普通关联使用 whereHas
+            $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
+                if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
+                    return;
+                }
+
+                $relatedModel = $q->getModel();
+                $table = $relatedModel->getTable();
+                $connection = $relatedModel->getConnectionName();
+
+                $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
+
+                if (array_key_exists($field, $columnsTypeMap)) {
+                    QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
+                }
+            });
+        }
     }
 
     /**
