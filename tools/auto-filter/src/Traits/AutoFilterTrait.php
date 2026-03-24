@@ -5,6 +5,7 @@ namespace Feiyun\Tools\AutoFilter\Traits;
 use Feiyun\Tools\AutoFilter\Contracts\AutoFilterInterface;
 use Feiyun\Tools\AutoFilter\Support\FieldTypeDetector;
 use Feiyun\Tools\AutoFilter\Support\QueryBuilder;
+use Hyperf\Database\Model\Relations\MorphTo;
 use Hyperf\HttpServer\Contract\RequestInterface;
 
 /**
@@ -141,43 +142,69 @@ trait AutoFilterTrait
         }
 
         $model = $query->getModel();
-        $relationInstance = $model->{$relationPath}();
+        $rootRelation = $relations[0];
 
-        // 检查是否为 MorphTo 关联
-        if ($relationInstance instanceof \Hyperf\Database\Model\Relations\MorphTo) {
-            // 对于 MorphTo 关联，使用 whereHasMorph
-            $query->whereHasMorph($relationPath, '*', function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
+        try {
+            $rootRelationInstance = $model->{$rootRelation}();
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        // 检查根关系是否为 MorphTo，若是则在 MorphTo 回调中处理后续关系
+        if ($rootRelationInstance instanceof MorphTo) {
+            $nestedPath = implode('.', array_slice($relations, 1));
+
+            $query->whereHasMorph($rootRelation, '*', function ($q) use ($nestedPath, $field, $value, $key, $whitelist, $blacklist) {
                 if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
                     return;
                 }
 
-                $relatedModel = $q->getModel();
-                $table = $relatedModel->getTable();
-                $connection = $relatedModel->getConnectionName();
-
-                $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
-
-                if (array_key_exists($field, $columnsTypeMap)) {
-                    QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
-                }
-            });
-        } else {
-            // 普通关联使用 whereHas
-            $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
-                if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
+                if ($nestedPath === '') {
+                    $this->applyFieldWhere($q, $field, $value);
                     return;
                 }
 
-                $relatedModel = $q->getModel();
-                $table = $relatedModel->getTable();
-                $connection = $relatedModel->getConnectionName();
-
-                $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
-
-                if (array_key_exists($field, $columnsTypeMap)) {
-                    QueryBuilder::buildWhere($q, $field, $value, $columnsTypeMap[$field]);
+                $nestedRootRelation = explode('.', $nestedPath)[0];
+                if (!method_exists($q->getModel(), $nestedRootRelation)) {
+                    return;
                 }
+
+                $q->whereHas($nestedPath, function ($nestedQ) use ($field, $value) {
+                    $this->applyFieldWhere($nestedQ, $field, $value);
+                });
             });
+
+            return;
+        }
+
+        // 普通关联（包含多级关系）直接使用 whereHas
+        $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
+            if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
+                return;
+            }
+
+            $this->applyFieldWhere($q, $field, $value);
+        });
+    }
+
+    /**
+     * 在当前查询模型上按字段类型追加 where 条件
+     *
+     * @param mixed $query
+     * @param string $field
+     * @param mixed $value
+     * @return void
+     */
+    protected function applyFieldWhere($query, string $field, $value): void
+    {
+        $relatedModel = $query->getModel();
+        $table = $relatedModel->getTable();
+        $connection = $relatedModel->getConnectionName();
+
+        $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
+
+        if (array_key_exists($field, $columnsTypeMap)) {
+            QueryBuilder::buildWhere($query, $field, $value, $columnsTypeMap[$field]);
         }
     }
 
@@ -207,6 +234,11 @@ trait AutoFilterTrait
 
             if (!is_object($relationInstance) || !method_exists($relationInstance, 'getRelated')) {
                 return false;
+            }
+
+            // MorphTo 在查询阶段通常无法提前确定真实 related 模型，无法继续可靠验证后续路径
+            if ($relationInstance instanceof MorphTo) {
+                return true;
             }
 
             $relatedModel = $relationInstance->getRelated();

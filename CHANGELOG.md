@@ -4,6 +4,11 @@ All notable changes to `feiyun/tools` will be documented in this file.
 
 ## [Unreleased]
 
+## [2.3.3] - 2026-03-24
+
+### Fixed
+- Auto Filter: 修复 `MorphTo` 多级关联字段过滤失效（如 `origin.group.name`），在根关系使用 `whereHasMorph` 并支持后续嵌套 `whereHas`
+
 ## [2.3.1] - 2026-03-13
 
 ### Fixed
