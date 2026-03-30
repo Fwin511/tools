@@ -29,6 +29,8 @@ Hyperf will automatically discover and load the configuration.
 ### Auto Filter Tool
 Intelligent database query filtering tool that automatically builds query conditions based on request parameters and field types.
 
+Supports `_as_` alias fields and `_only_` exact-match fields for string columns.
+
 [View Detailed Documentation →](./tools/auto-filter/README.md)
 
 ### More Tools (Planned)

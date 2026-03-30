@@ -12,9 +12,10 @@ class QueryBuilder
      * @param string $field
      * @param mixed $value
      * @param string $type
+     * @param bool $forceExact
      * @return void
      */
-    public static function buildWhere($query, string $field, $value, string $type): void
+    public static function buildWhere($query, string $field, $value, string $type, bool $forceExact = false): void
     {
         $field = static::qualifyField($query, $field);
 
@@ -37,6 +38,11 @@ class QueryBuilder
                     if (!empty($values)) {
                         $query->whereIn($field, array_values($values));
                     }
+                    break;
+                }
+
+                if ($forceExact) {
+                    $query->where($field, '=', $value);
                     break;
                 }
 

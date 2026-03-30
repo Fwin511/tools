@@ -4,6 +4,20 @@ All notable changes to `feiyun/tools` will be documented in this file.
 
 ## [Unreleased]
 
+
+
+## [2.3.4] - 2026-03-30
+
+### Added
+- [Tooling] 新增 changelog 自动记录与发版归档流程，支持任务后写入日志并自动重建 Unreleased (compat: backward-compatible; files: `scripts/changelog-manager.php`, `.agents/skills/feiyun-tools-maintainer/SKILL.md`, `.agents/skills/feiyun-tools-maintainer/references/changelog-workflow.md`, `.agents/skills/feiyun-tools-maintainer/references/task-templates.md`, `.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh`, `Makefile`, `composer.json`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh fast`; entry: 20260330-092615-added-tooling)
+
+### Fixed
+- [Auto Filter] 新增 _only_ 前缀支持字符串字段精确匹配并保持原有筛选兼容 (compat: backward-compatible; files: `tools/auto-filter/src/Traits/AutoFilterTrait.php`, `tools/auto-filter/src/Support/QueryBuilder.php`, `tests/AutoFilterAliasTest.php`, `tools/auto-filter/README.md`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh auto-filter`; entry: 20260330-100058-fixed-auto-filter)
+
+### Docs
+- [Skill Standard] 新增新会话标准启动SOP，统一skills执行与上下文预算规范 (compat: backward-compatible; files: `AGENTS.md`, `.agents/skills/feiyun-tools-maintainer/SKILL.md`, `.agents/skills/feiyun-tools-maintainer/references/agent-standard-workflow.md`, `.agents/skills/feiyun-tools-maintainer/references/task-templates.md`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh fast`; entry: 20260330-094716-docs-skill-standard)
+
+
 ## [2.3.3] - 2026-03-24
 
 ### Fixed

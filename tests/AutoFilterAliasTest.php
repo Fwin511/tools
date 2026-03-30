@@ -25,6 +25,10 @@ class AutoFilterAliasTest extends TestCase
         // 测试没有别名前缀的字段
         $result = $method->invokeArgs($this, ['status']);
         $this->assertEquals('status', $result);
+
+        // 测试精确匹配前缀
+        $result = $method->invokeArgs($this, ['_only_goods_code']);
+        $this->assertEquals('goods_code', $result);
     }
 
     /**
@@ -42,6 +46,10 @@ class AutoFilterAliasTest extends TestCase
 
         // 测试没有别名前缀的关联字段
         $result = $method->invokeArgs($this, ['taskResult.submit_staff_id']);
+        $this->assertEquals('taskResult.submit_staff_id', $result);
+
+        // 测试关联表精确匹配前缀
+        $result = $method->invokeArgs($this, ['taskResult._only_submit_staff_id']);
         $this->assertEquals('taskResult.submit_staff_id', $result);
     }
 
@@ -83,6 +91,10 @@ class AutoFilterAliasTest extends TestCase
         // 关联表中只有 _as_
         $result = $method->invokeArgs($this, ['relation._as_']);
         $this->assertEquals('relation.', $result);
+
+        // 只有 _only_
+        $result = $method->invokeArgs($this, ['_only_']);
+        $this->assertEquals('', $result);
     }
 
     /**
@@ -99,7 +111,9 @@ class AutoFilterAliasTest extends TestCase
             '_filter' => 'test',
             '_source' => 'list',
             '_as_serial_number' => 'R01594',
+            '_only_goods_code' => '0421-1811',
             'relation._as_field' => 'value',
+            'relation._only_field' => 'value',
             'normal_field' => 'value',
         ];
 
@@ -113,8 +127,25 @@ class AutoFilterAliasTest extends TestCase
         // 别名字段应该保留
         $this->assertArrayHasKey('_as_serial_number', $result);
         $this->assertArrayHasKey('relation._as_field', $result);
+        $this->assertArrayHasKey('_only_goods_code', $result);
+        $this->assertArrayHasKey('relation._only_field', $result);
 
         // 普通字段应该保留
         $this->assertArrayHasKey('normal_field', $result);
+    }
+
+    /**
+     * 测试 _only_ 精确匹配字段识别
+     */
+    public function testIsExactMatchField()
+    {
+        $reflection = new \ReflectionClass($this);
+        $method = $reflection->getMethod('isExactMatchField');
+        $method->setAccessible(true);
+
+        $this->assertTrue($method->invokeArgs($this, ['_only_goods_code']));
+        $this->assertTrue($method->invokeArgs($this, ['taskResult._only_goods_code']));
+        $this->assertFalse($method->invokeArgs($this, ['goods_code']));
+        $this->assertFalse($method->invokeArgs($this, ['_as_goods_code']));
     }
 }

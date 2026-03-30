@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feiyun Tools Maintainer"
+  short_description: "Maintain feiyun/tools safely and consistently"
+  default_prompt: "Use $feiyun-tools-maintainer to maintain feiyun/tools safely with module-aware checks and release-ready updates."

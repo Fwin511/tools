@@ -68,7 +68,9 @@ trait AutoFilterTrait
                 }
             }
 
-            // 解析字段别名：将 _as_ 开头的字段转换为实际字段名
+            $forceExact = static::isExactMatchField($key);
+
+            // 解析字段别名：将 _as_ / _only_ 开头的字段转换为实际字段名
             $actualKey = static::parseFieldAlias($key);
 
             if (!QueryBuilder::isFieldAllowed($actualKey, $whitelist, $blacklist)) {
@@ -78,11 +80,11 @@ trait AutoFilterTrait
             if (strpos($actualKey, '.') === false) {
                 // 当前表字段
                 if (array_key_exists($actualKey, $columnsTypeMap)) {
-                    QueryBuilder::buildWhere($query, $actualKey, $value, $columnsTypeMap[$actualKey]);
+                    QueryBuilder::buildWhere($query, $actualKey, $value, $columnsTypeMap[$actualKey], $forceExact);
                 }
             } else {
                 // 关联表字段
-                $this->buildRelationWhere($query, $actualKey, $value, $whitelist, $blacklist);
+                $this->buildRelationWhere($query, $actualKey, $value, $whitelist, $blacklist, $forceExact);
             }
         }
 
@@ -129,9 +131,10 @@ trait AutoFilterTrait
      * @param mixed $value
      * @param array $whitelist
      * @param array $blacklist
+     * @param bool $forceExact
      * @return void
      */
-    protected function buildRelationWhere($query, string $key, $value, array $whitelist, array $blacklist): void
+    protected function buildRelationWhere($query, string $key, $value, array $whitelist, array $blacklist, bool $forceExact = false): void
     {
         $relations = explode('.', $key);
         $field = array_pop($relations);
@@ -154,23 +157,28 @@ trait AutoFilterTrait
         if ($rootRelationInstance instanceof MorphTo) {
             $nestedPath = implode('.', array_slice($relations, 1));
 
-            $query->whereHasMorph($rootRelation, '*', function ($q) use ($nestedPath, $field, $value, $key, $whitelist, $blacklist) {
+            $query->whereHasMorph($rootRelation, '*', function ($q) use ($nestedPath, $field, $value, $key, $whitelist, $blacklist, $forceExact) {
                 if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
                     return;
                 }
 
                 if ($nestedPath === '') {
-                    $this->applyFieldWhere($q, $field, $value);
+                    if (!$this->applyFieldWhere($q, $field, $value, $forceExact)) {
+                        $q->whereRaw('1 = 0');
+                    }
                     return;
                 }
 
                 $nestedRootRelation = explode('.', $nestedPath)[0];
                 if (!method_exists($q->getModel(), $nestedRootRelation)) {
+                    $q->whereRaw('1 = 0');
                     return;
                 }
 
-                $q->whereHas($nestedPath, function ($nestedQ) use ($field, $value) {
-                    $this->applyFieldWhere($nestedQ, $field, $value);
+                $q->whereHas($nestedPath, function ($nestedQ) use ($field, $value, $forceExact) {
+                    if (!$this->applyFieldWhere($nestedQ, $field, $value, $forceExact)) {
+                        $nestedQ->whereRaw('1 = 0');
+                    }
                 });
             });
 
@@ -178,12 +186,14 @@ trait AutoFilterTrait
         }
 
         // 普通关联（包含多级关系）直接使用 whereHas
-        $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist) {
+        $query->whereHas($relationPath, function ($q) use ($field, $value, $key, $whitelist, $blacklist, $forceExact) {
             if (!QueryBuilder::isFieldAllowed($key, $whitelist, $blacklist)) {
                 return;
             }
 
-            $this->applyFieldWhere($q, $field, $value);
+            if (!$this->applyFieldWhere($q, $field, $value, $forceExact)) {
+                $q->whereRaw('1 = 0');
+            }
         });
     }
 
@@ -193,9 +203,10 @@ trait AutoFilterTrait
      * @param mixed $query
      * @param string $field
      * @param mixed $value
-     * @return void
+     * @param bool $forceExact
+     * @return bool
      */
-    protected function applyFieldWhere($query, string $field, $value): void
+    protected function applyFieldWhere($query, string $field, $value, bool $forceExact = false): bool
     {
         $relatedModel = $query->getModel();
         $table = $relatedModel->getTable();
@@ -204,8 +215,11 @@ trait AutoFilterTrait
         $columnsTypeMap = FieldTypeDetector::getTableColumnsType($table, $connection);
 
         if (array_key_exists($field, $columnsTypeMap)) {
-            QueryBuilder::buildWhere($query, $field, $value, $columnsTypeMap[$field]);
+            QueryBuilder::buildWhere($query, $field, $value, $columnsTypeMap[$field], $forceExact);
+            return true;
         }
+
+        return false;
     }
 
     /**
@@ -281,7 +295,7 @@ trait AutoFilterTrait
 
     /**
      * 排除以单个下划线开头的系统参数
-     * 但保留 _as_ 开头的别名字段
+     * 但保留 _as_ / _only_ 开头的筛选字段
      * 
      * @param array $params
      * @return array
@@ -289,16 +303,16 @@ trait AutoFilterTrait
     protected static function excludeSystemParams(array $params): array
     {
         return array_filter($params, function ($key) {
-            // 如果以 _as_ 开头，保留（这是别名字段）
-            if (strpos($key, '_as_') === 0) {
+            // 如果以 _as_ / _only_ 开头，保留（这是筛选字段前缀）
+            if (strpos($key, '_as_') === 0 || strpos($key, '_only_') === 0) {
                 return true;
             }
             
-            // 如果包含点号，检查最后一部分是否以 _as_ 开头（关联表别名）
+            // 如果包含点号，检查最后一部分是否以 _as_ / _only_ 开头（关联表筛选字段）
             if (strpos($key, '.') !== false) {
                 $parts = explode('.', $key);
                 $lastPart = end($parts);
-                if (strpos($lastPart, '_as_') === 0) {
+                if (strpos($lastPart, '_as_') === 0 || strpos($lastPart, '_only_') === 0) {
                     return true;
                 }
             }
@@ -314,8 +328,9 @@ trait AutoFilterTrait
 
     /**
      * 解析字段别名
-     * 将 _as_ 开头的字段转换为实际字段名
+     * 将 _as_ / _only_ 开头的字段转换为实际字段名
      * 例如: taskResult._as_submit_staff_id -> taskResult.submit_staff_id
+     * 例如: _only_goods_code -> goods_code
      *
      * @param string $fieldName
      * @return string
@@ -329,19 +344,62 @@ trait AutoFilterTrait
             $field = array_pop($parts);
             $relationPath = implode('.', $parts);
 
-            // 处理字段名的别名
-            if (strpos($field, '_as_') === 0) {
-                $field = substr($field, 4); // 移除 _as_ 前缀
-            }
+            $field = static::stripFieldPrefix($field);
 
             return $relationPath . '.' . $field;
         }
 
-        // 处理普通字段的别名
-        if (strpos($fieldName, '_as_') === 0) {
-            return substr($fieldName, 4); // 移除 _as_ 前缀
+        return static::stripFieldPrefix($fieldName);
+    }
+
+    /**
+     * 是否为精确匹配字段（_only_ 前缀）
+     */
+    protected static function isExactMatchField(string $fieldName): bool
+    {
+        $field = $fieldName;
+        if (strpos($fieldName, '.') !== false) {
+            $parts = explode('.', $fieldName);
+            $field = array_pop($parts);
         }
 
-        return $fieldName;
+        while ($field !== '') {
+            if (strpos($field, '_only_') === 0) {
+                return true;
+            }
+
+            if (strpos($field, '_as_') === 0) {
+                $field = substr($field, 4);
+                continue;
+            }
+
+            break;
+        }
+
+        return false;
+    }
+
+    /**
+     * 去除字段名前缀（_as_ / _only_）
+     */
+    protected static function stripFieldPrefix(string $fieldName): string
+    {
+        $field = $fieldName;
+
+        while ($field !== '') {
+            if (strpos($field, '_as_') === 0) {
+                $field = substr($field, 4);
+                continue;
+            }
+
+            if (strpos($field, '_only_') === 0) {
+                $field = substr($field, 6);
+                continue;
+            }
+
+            break;
+        }
+
+        return $field;
     }
 }

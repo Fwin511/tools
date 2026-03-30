@@ -60,6 +60,10 @@
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
         "readme:en": "make readme-en",
         "readme:cn": "make readme-cn",
-        "readme:restore": "make readme-restore"
+        "readme:restore": "make readme-restore",
+        "changelog:add": "php scripts/changelog-manager.php add",
+        "changelog:rebuild": "php scripts/changelog-manager.php rebuild-unreleased",
+        "changelog:validate": "php scripts/changelog-manager.php validate",
+        "changelog:release": "php scripts/changelog-manager.php release"
     }
 }
