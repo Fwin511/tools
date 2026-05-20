@@ -46,6 +46,9 @@ Use this skill to maintain `feiyun/tools` with consistent structure, backward-co
 - Keep exclusion of system params that start with `_`, while allowing `_as_` fields.
 - Validate relation path handling (`whereHas` and `whereHasMorph`) after changes.
 - Keep field type behavior aligned with `QueryBuilder::buildWhere` rules.
+- Preserve relation custom-field filters using keys like `customer._customer_field_{string|array|range}__CODE`.
+- For custom `range` fields, treat `start_time/end_time` as day-based filtering on `input_value`; values may be stored as either `Y-m-d` or full datetime strings.
+- For custom `array` fields, keep compatibility with raw scalar values and JSON-array-like stored strings in `input_value`.
 - Avoid introducing ambiguous column names; keep qualified field behavior.
 
 ## SQL Migration Rules

@@ -192,6 +192,30 @@ class ProductController extends Controller
 }
 ```
 
+### 自定义字段筛选
+
+当关联模型中使用 `code` + `input_value` 存储自定义字段值时，可以使用以下命名规则：
+
+```php
+// 文本字段
+// GET /api/orders?customer._customer_field_string__OOOOOQLZ=文本值
+
+// 数组选项字段
+// GET /api/orders?customer._customer_field_array__OOOOOQLC[]=1&customer._customer_field_array__OOOOOQLC[]=3
+
+// 时间区间字段
+// GET /api/orders?customer._customer_field_range__OOOOOQYH[start_time]=2026-05-19&customer._customer_field_range__OOOOOQYH[end_time]=2026-05-20
+
+// 数值区间字段
+// GET /api/orders?customer._customer_field_range__OOOOOQYQ[start]=1&customer._customer_field_range__OOOOOQYQ[end]=4
+```
+
+规则说明：
+
+- `_customer_field_string__{CODE}`: 固定按关联表 `code` 匹配 `_{CODE}`，并对 `input_value` 执行模糊查询
+- `_customer_field_array__{CODE}`: 固定按关联表 `code` 匹配 `_{CODE}`，并兼容 `input_value` 中 JSON 数组字符串的选项匹配
+- `_customer_field_range__{CODE}`: 当传入 `start_time/end_time` 时按时间区间比较；当传入 `start/end` 时按数值区间比较
+
 ## 🛡️ 安全考虑
 
 1. **默认黑名单**: 自动排除敏感字段如 `password`、`remember_token` 等

@@ -6,6 +6,19 @@ All notable changes to `feiyun/tools` will be documented in this file.
 
 
 
+## [2.3.5] - 2026-05-20
+
+### Changed
+- [Auto Filter] 支持关联自定义字段的 string/array/range 过滤 (compat: backward-compatible; files: `tools/auto-filter/src/Traits/AutoFilterTrait.php`, `tools/auto-filter/README.md`, `tests/AutoFilterAliasTest.php`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh auto-filter`; entry: 20260520-022133-changed-auto-filter)
+
+### Fixed
+- [Auto Filter] 修复自定义 range 字段按 JSON 解析导致的时间过滤报错 (compat: backward-compatible; files: `tools/auto-filter/src/Traits/AutoFilterTrait.php`, `tests/AutoFilterAliasTest.php`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh auto-filter`; entry: 20260520-024248-fixed-auto-filter)
+- [Auto Filter] 修复自定义日期 range 对纯日期字符串无法命中的问题 (compat: backward-compatible; files: `tools/auto-filter/src/Traits/AutoFilterTrait.php`, `tests/AutoFilterAliasTest.php`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh auto-filter`; entry: 20260520-025350-fixed-auto-filter)
+
+### Docs
+- [Agent Skill] 补充 Auto Filter 自定义字段规则到维护 skill 与参考文档 (compat: backward-compatible; files: `.agents/skills/feiyun-tools-maintainer/SKILL.md`, `.agents/skills/feiyun-tools-maintainer/references/project-map.md`, `.agents/skills/feiyun-tools-maintainer/references/task-templates.md`; verify: `./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh fast`; entry: 20260520-060822-docs-agent-skill)
+
+
 ## [2.3.4] - 2026-03-30
 
 ### Added

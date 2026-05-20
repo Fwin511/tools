@@ -29,6 +29,7 @@ php scripts/changelog-manager.php add --type {fixed|added|changed|refactored|rev
 影响范围：{src|tools/auto-filter|tools/sql-migration|tests}
 只允许修改：{具体路径，尽量小范围}
 先读：AGENTS.md、SKILL.md、references/project-map.md。
+如果是 Auto Filter，自检是否涉及 `_as_/_only_`、关系路径、或 `customer._customer_field_{string|array|range}__CODE` 这类自定义字段规则。
 完成代码后先记录：
 php scripts/changelog-manager.php add --type fixed --scope "{模块}" --summary "{修复摘要}" --files "{文件1,文件2}" --validation "{验证命令}"
 完成后运行：./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh {fast|auto-filter|full}
@@ -43,6 +44,7 @@ php scripts/changelog-manager.php add --type fixed --scope "{模块}" --summary 
 约束：保持向后兼容；不改动未授权模块。
 仅处理模块：{auto-filter|sql-migration|shared src}
 先给出最小实现路径，然后直接改代码与文档。
+如果功能落在 Auto Filter，先确认是否影响别名字段、自定义字段、字段类型推断或关系查询行为。
 完成代码后先记录：
 php scripts/changelog-manager.php add --type added --scope "{模块}" --summary "{功能摘要}" --files "{文件1,文件2}" --validation "{验证命令}"
 完成后运行：./.agents/skills/feiyun-tools-maintainer/scripts/run-maintenance-checks.sh {fast|full}

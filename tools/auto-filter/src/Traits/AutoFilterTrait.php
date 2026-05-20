@@ -31,7 +31,7 @@ trait AutoFilterTrait
 
         // 始终排除分页参数和系统参数
         $params = static::excludeParams($params, ['page', 'page_size', 'per_page']);
-        
+
         // 排除以单个下划线开头的系统参数（但保留 _as_ 别名字段）
         $params = static::excludeSystemParams($params);
 
@@ -208,6 +208,10 @@ trait AutoFilterTrait
      */
     protected function applyFieldWhere($query, string $field, $value, bool $forceExact = false): bool
     {
+        if ($this->applyCustomFieldWhere($query, $field, $value, $forceExact)) {
+            return true;
+        }
+
         $relatedModel = $query->getModel();
         $table = $relatedModel->getTable();
         $connection = $relatedModel->getConnectionName();
@@ -217,6 +221,91 @@ trait AutoFilterTrait
         if (array_key_exists($field, $columnsTypeMap)) {
             QueryBuilder::buildWhere($query, $field, $value, $columnsTypeMap[$field], $forceExact);
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 处理自定义字段过滤
+     * 字段格式: _customer_field_{string|array|range}__{CODE}
+     *
+     * @param mixed $query
+     * @param string $field
+     * @param mixed $value
+     * @param bool $forceExact
+     * @return bool
+     */
+    protected function applyCustomFieldWhere($query, string $field, $value, bool $forceExact = false): bool
+    {
+        $customField = static::parseCustomFieldKey($field);
+
+        if ($customField === null) {
+            return false;
+        }
+
+        $codeColumn = static::qualifyCustomFieldColumn($query, 'code');
+        $valueColumn = static::qualifyCustomFieldColumn($query, 'input_value');
+
+        $query->where($codeColumn, '=', $customField['code']);
+
+        switch ($customField['type']) {
+            case 'string':
+                if (!is_scalar($value)) {
+                    return false;
+                }
+
+                if ($forceExact) {
+                    $query->where($valueColumn, '=', (string)$value);
+                    return true;
+                }
+
+                $query->where($valueColumn, 'like', '%' . $value . '%');
+                return true;
+
+            case 'array':
+                $values = is_array($value) ? array_values(array_filter($value, function ($item) {
+                    return $item !== null && $item !== '';
+                })) : [$value];
+
+                if (empty($values)) {
+                    return false;
+                }
+
+                $query->where(function ($nestedQuery) use ($valueColumn, $values) {
+                    foreach ($values as $index => $item) {
+                        $method = $index === 0 ? 'where' : 'orWhere';
+                        $nestedQuery->{$method}(function ($itemQuery) use ($valueColumn, $item) {
+                            $itemQuery->where($valueColumn, '=', (string)$item)
+                                ->orWhere($valueColumn, 'like', '%"' . $item . '"%');
+                        });
+                    }
+                });
+
+                return true;
+
+            case 'range':
+                if (!is_array($value)) {
+                    return false;
+                }
+
+                if (isset($value['start_time'], $value['end_time'])) {
+                    $query->whereRaw(
+                        "DATE({$valueColumn}) BETWEEN ? AND ?",
+                        [$value['start_time'], $value['end_time']]
+                    );
+                    return true;
+                }
+
+                if (isset($value['start'], $value['end'])) {
+                    $query->whereRaw(
+                        "CAST({$valueColumn} AS DECIMAL(20, 6)) BETWEEN ? AND ?",
+                        [$value['start'], $value['end']]
+                    );
+                    return true;
+                }
+
+                return false;
         }
 
         return false;
@@ -296,7 +385,7 @@ trait AutoFilterTrait
     /**
      * 排除以单个下划线开头的系统参数
      * 但保留 _as_ / _only_ 开头的筛选字段
-     * 
+     *
      * @param array $params
      * @return array
      */
@@ -307,7 +396,7 @@ trait AutoFilterTrait
             if (strpos($key, '_as_') === 0 || strpos($key, '_only_') === 0) {
                 return true;
             }
-            
+
             // 如果包含点号，检查最后一部分是否以 _as_ / _only_ 开头（关联表筛选字段）
             if (strpos($key, '.') !== false) {
                 $parts = explode('.', $key);
@@ -316,12 +405,12 @@ trait AutoFilterTrait
                     return true;
                 }
             }
-            
+
             // 排除其他以单个下划线开头的系统参数（如 _sort, _filter 等）
             if (strpos($key, '_') === 0) {
                 return false;
             }
-            
+
             return true;
         }, ARRAY_FILTER_USE_KEY);
     }
@@ -401,5 +490,56 @@ trait AutoFilterTrait
         }
 
         return $field;
+    }
+
+    /**
+     * 解析自定义字段键
+     *
+     * @param string $field
+     * @return array<string, string>|null
+     */
+    protected static function parseCustomFieldKey(string $field): ?array
+    {
+        if (!preg_match('/^_customer_field_(string|array|range)__([A-Za-z0-9]+)$/', $field, $matches)) {
+            return null;
+        }
+
+        return [
+            'type' => $matches[1],
+            'code' => '_' . $matches[2],
+        ];
+    }
+
+    /**
+     * 为自定义字段查询列补全表前缀，避免歧义。
+     *
+     * @param mixed $query
+     * @param string $column
+     * @return string
+     */
+    protected static function qualifyCustomFieldColumn($query, string $column): string
+    {
+        if (!is_object($query) || !method_exists($query, 'getModel')) {
+            return $column;
+        }
+
+        try {
+            $model = $query->getModel();
+            if (!is_object($model)) {
+                return $column;
+            }
+
+            if (method_exists($model, 'qualifyColumn')) {
+                return $model->qualifyColumn($column);
+            }
+
+            if (method_exists($model, 'getTable')) {
+                return $model->getTable() . '.' . $column;
+            }
+        } catch (\Throwable $e) {
+            return $column;
+        }
+
+        return $column;
     }
 }

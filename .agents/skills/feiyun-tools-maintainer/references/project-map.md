@@ -26,7 +26,7 @@
 
 ## Auto Filter Module Map
 
-- `tools/auto-filter/src/Traits/AutoFilterTrait.php`: request param filtering and relation query assembly
+- `tools/auto-filter/src/Traits/AutoFilterTrait.php`: request param filtering, relation query assembly, and relation custom-field filters such as `_customer_field_{string|array|range}__CODE`
 - `tools/auto-filter/src/Support/QueryBuilder.php`: type-driven where clause builder
 - `tools/auto-filter/src/Support/FieldTypeDetector.php`: information_schema type detection with cache
 - `tools/auto-filter/config/auto-filter.php`: module config defaults
@@ -37,6 +37,7 @@ Critical behaviors to preserve:
 - `_as_` alias parsing for normal and relation fields
 - Exclusion of system params beginning with `_` except alias fields
 - `MorphTo` relation handling compatibility
+- Relation custom-field filters on `code` + `input_value`, including `string`, `array`, and day-based `range` matching
 - Field qualification to reduce ambiguous columns
 
 ## SQL Migration Module Map
